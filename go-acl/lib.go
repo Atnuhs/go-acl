@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -30,15 +32,7 @@ var (
 	Dbg = bufio.NewWriterSize(os.Stderr, BufferSize)
 )
 
-// Ordered はconstraints.OrderedがAtCoderで使えないので、代わりに使う
-type Ordered interface {
-	~int | ~int8 | ~int16 | ~int32 | ~int64 |
-		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
-		~float32 | ~float64 |
-		~string
-}
-
-type Entry[K Ordered, V any] struct {
+type Entry[K constraints.Ordered, V any] struct {
 	K K
 	V V
 }
@@ -128,40 +122,67 @@ func I() int {
 
 // II は整数を2つ読み込む
 func II() (int, int) {
-	var ret1, ret2 int
-	fmt.Fscan(In, &ret1, &ret2)
-	return ret1, ret2
+	return I(), I()
 }
 
 // III は整数を3つ読み込む
 func III() (int, int, int) {
-	var ret1, ret2, ret3 int
-	fmt.Fscan(In, &ret1, &ret2, &ret3)
-	return ret1, ret2, ret3
+	return I(), I(), I()
 }
 
 // IIII は整数を4つ読み込む
 func IIII() (int, int, int, int) {
-	var ret1, ret2, ret3, ret4 int
-	fmt.Fscan(In, &ret1, &ret2, &ret3, &ret4)
-	return ret1, ret2, ret3, ret4
+	return I(), I(), I(), I()
 }
 
 // Is は整数をn個読み込む
 func Is(n int) []int {
 	ret := make([]int, n)
 	for i := range ret {
-		fmt.Fscan(In, &ret[i])
+		ret[i] = I()
 	}
 	return ret
 }
 
-// Iss は整数をh行w列の配列として読み込む
-func Iss(h, w int) [][]int {
+// IIs はi行目がa_i, b_iとなっている入力を受け取り、配列a, bを返す
+func IIs(n int) ([]int, []int) {
+	a := make([]int, n)
+	b := make([]int, n)
+	for i := range a {
+		a[i], b[i] = II()
+	}
+	return a, b
+}
+
+// IIIs はi行目がa_i, b_i, c_iとなっている入力を受け取り、配列a, b, cを返す
+func IIIs(n int) ([]int, []int, []int) {
+	a := make([]int, n)
+	b := make([]int, n)
+	c := make([]int, n)
+	for i := range a {
+		a[i], b[i], c[i] = III()
+	}
+	return a, b, c
+}
+
+// IIIIs はi行目がa_i, b_i, c_i, d_iとなっている入力を受け取り、配列a, b, c, dを返す
+func IIIIs(n int) ([]int, []int, []int, []int) {
+	a := make([]int, n)
+	b := make([]int, n)
+	c := make([]int, n)
+	d := make([]int, n)
+	for i := range a {
+		a[i], b[i], c[i], d[i] = IIII()
+	}
+	return a, b, c, d
+}
+
+// I2s は整数をh行w列の配列として読み込む
+func I2s(h, w int) [][]int {
 	ret := L2[int](h, w)
 	for i := range ret {
 		for j := range ret[i] {
-			fmt.Fscan(In, &ret[i][j])
+			ret[i][j] = I()
 		}
 	}
 	return ret
@@ -294,7 +315,7 @@ func Bisect(ok, ng int, pred func(mid int) bool) int {
 
 // Geは昇順ソート済みの配列aに対して、x以上の要素の左端Indexを返す
 // aのすべての要素がxより小さい場合、len(a)を返す
-func Ge[T Ordered](a []T, x T) int {
+func Ge[T constraints.Ordered](a []T, x T) int {
 	ok, ng := len(a), -1
 	for ok-ng > 1 {
 		m := (ok + ng) >> 1
@@ -309,7 +330,7 @@ func Ge[T Ordered](a []T, x T) int {
 
 // Gtは昇順ソート済みの配列aに対して、xより大きい要素の左端Indexを返す
 // aのすべての要素がx以下の場合、len(a)を返す
-func Gt[T Ordered](a []T, x T) int {
+func Gt[T constraints.Ordered](a []T, x T) int {
 	ok, ng := len(a), -1
 	for ok-ng > 1 {
 		m := (ok + ng) >> 1
@@ -324,7 +345,7 @@ func Gt[T Ordered](a []T, x T) int {
 
 // Leは昇順ソート済みの配列aに対し、x以下の要素の右端Indexを返す
 // aのすべての要素がxより大きい場合、-1を返す
-func Le[T Ordered](a []T, x T) int {
+func Le[T constraints.Ordered](a []T, x T) int {
 	ok, ng := -1, len(a)
 	for ng-ok > 1 {
 		m := (ok + ng) >> 1
@@ -339,7 +360,7 @@ func Le[T Ordered](a []T, x T) int {
 
 // Ltは昇順ソート済みの配列aに対して、xより小さい要素の右端を返す
 // aのすべての要素がx以上の場合、-1を返す
-func Lt[T Ordered](a []T, x T) int {
+func Lt[T constraints.Ordered](a []T, x T) int {
 	ok, ng := -1, len(a)
 	for ng-ok > 1 {
 		m := (ok + ng) >> 1
@@ -352,7 +373,7 @@ func Lt[T Ordered](a []T, x T) int {
 	return ok
 }
 
-func Uniq[T Ordered](vals []T) []T {
+func Uniq[T constraints.Ordered](vals []T) []T {
 	ret := make([]T, 0, len(vals))
 	if len(vals) == 0 {
 		return ret
@@ -366,12 +387,12 @@ func Uniq[T Ordered](vals []T) []T {
 	return ret
 }
 
-type Compress[T Ordered] struct {
+type Compress[T constraints.Ordered] struct {
 	toOrig []T       // idx -> value
 	toIdx  map[T]int // value -> idx
 }
 
-func NewCompress[T Ordered](vals []T) *Compress[T] {
+func NewCompress[T constraints.Ordered](vals []T) *Compress[T] {
 	// Copy and sort the values
 	v := make([]T, len(vals))
 	copy(v, vals)
@@ -433,13 +454,13 @@ func (k Key) ToInts() []int {
 	return ret
 }
 
-func Sort[T Ordered](arr []T) []T {
+func Sort[T constraints.Ordered](arr []T) []T {
 	ret := append([]T(nil), arr...)
 	sort.Slice(ret, func(i int, j int) bool { return ret[i] < ret[j] })
 	return ret
 }
 
-func SortIdx[T Ordered](arr []T) []int {
+func SortIdx[T constraints.Ordered](arr []T) []int {
 	ret := make([]int, len(arr))
 	for i := range ret {
 		ret[i] = i
@@ -463,13 +484,13 @@ func SortIdxF[T any](arr []T, less LessFunc[T]) []int {
 	return ret
 }
 
-func SortE[K Ordered, V any](arr []Entry[K, V]) []Entry[K, V] {
+func SortE[K constraints.Ordered, V any](arr []Entry[K, V]) []Entry[K, V] {
 	ret := append([]Entry[K, V](nil), arr...)
 	sort.Slice(ret, func(i, j int) bool { return ret[i].K < ret[j].K })
 	return ret
 }
 
-func SortIdxE[K Ordered, V any](arr []Entry[K, V]) []int {
+func SortIdxE[K constraints.Ordered, V any](arr []Entry[K, V]) []int {
 	ret := make([]int, len(arr))
 	for i := range ret {
 		ret[i] = i

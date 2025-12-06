@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"golang.org/x/exp/constraints"
+)
 
 type splitMode int
 
@@ -10,7 +14,7 @@ const (
 )
 
 // splaynode はスプレー木のノード
-type splaynode[K Ordered, V any] struct {
+type splaynode[K constraints.Ordered, V any] struct {
 	l, r, p *splaynode[K, V]
 	key     K
 	value   V
@@ -188,7 +192,7 @@ func (p *splaynode[K, V]) cutLeft() (L, R *splaynode[K, V]) {
 // split
 // splitMode=SplitLE_GT => (L {x | x.key <  key}, R: {x | x.key >= key})
 // splitMode=SplitLT_GE => (L {x | x.key <= key}, R: {x | x.key >  key})
-func split[K Ordered, V any](root *splaynode[K, V], key K, mode splitMode) (L, R *splaynode[K, V]) {
+func split[K constraints.Ordered, V any](root *splaynode[K, V], key K, mode splitMode) (L, R *splaynode[K, V]) {
 	if root == nil {
 		return nil, nil
 	}
@@ -225,7 +229,7 @@ func splitAt[V any](root *splaynode[int, V], i int) (L, R *splaynode[int, V]) {
 	return root.cutLeft()
 }
 
-func merge[K Ordered, V any](L, R *splaynode[K, V]) *splaynode[K, V] {
+func merge[K constraints.Ordered, V any](L, R *splaynode[K, V]) *splaynode[K, V] {
 	if L == nil {
 		return R
 	}

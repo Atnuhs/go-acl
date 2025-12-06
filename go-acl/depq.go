@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"golang.org/x/exp/constraints"
+)
 
 // lIdxは左の兄弟
 // return (idx / 2) * 2
@@ -28,12 +32,12 @@ func cIdx(idx int) int {
 
 // DEPQ は二重優先度キューの実装
 // 二重優先度キューは、最大値と最小値をO(logN)で取得できるデータ構造
-type DEPQ[T Ordered] struct {
+type DEPQ[T constraints.Ordered] struct {
 	values []T
 }
 
 // NewDEPQ は二重優先度キューを初期化する
-func NewDEPQ[T Ordered](values ...T) *DEPQ[T] {
+func NewDEPQ[T constraints.Ordered](values ...T) *DEPQ[T] {
 	pq := &DEPQ[T]{
 		values: values,
 	}

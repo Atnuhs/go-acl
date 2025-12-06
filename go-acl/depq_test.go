@@ -7,6 +7,7 @@ import (
 
 	"github.com/Atnuhs/atcoder-cui/go-acl/testlib"
 	"github.com/google/go-cmp/cmp"
+	"golang.org/x/exp/constraints"
 )
 
 func Test_lIdx(t *testing.T) {
@@ -169,7 +170,7 @@ func Fuzz_cIdx(f *testing.F) {
 	})
 }
 
-func check_heap[T Ordered](t *testing.T, pq *DEPQ[T]) {
+func check_heap[T constraints.Ordered](t *testing.T, pq *DEPQ[T]) {
 	t.Helper()
 	for i := range pq.values {
 		cl := cIdx(i)

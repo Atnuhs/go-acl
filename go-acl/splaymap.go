@@ -1,12 +1,14 @@
 package main
 
+import "golang.org/x/exp/constraints"
+
 // Splaymap は汎用的なスプレー木の実装
-type Splaymap[K Ordered, V any] struct {
+type Splaymap[K constraints.Ordered, V any] struct {
 	root *splaynode[K, V]
 }
 
 // NewSplaymap は新しいスプレー木を作成
-func NewSplaymap[K Ordered, V any]() *Splaymap[K, V] {
+func NewSplaymap[K constraints.Ordered, V any]() *Splaymap[K, V] {
 	return &Splaymap[K, V]{}
 }
 

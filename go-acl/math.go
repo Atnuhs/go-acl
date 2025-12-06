@@ -1,6 +1,10 @@
 package main
 
-import "math"
+import (
+	"math"
+
+	"golang.org/x/exp/constraints"
+)
 
 // return x! % mod with O(x)
 func Factorial(x, mod int) int {
@@ -113,7 +117,7 @@ func NextPerm(a []int) bool {
 }
 
 // Extrema returns min, max
-func Extrema[T Ordered](vals ...T) (T, T) {
+func Extrema[T constraints.Ordered](vals ...T) (T, T) {
 	mi, ma := vals[0], vals[0]
 	for _, v := range vals {
 		if v < mi {
@@ -126,7 +130,7 @@ func Extrema[T Ordered](vals ...T) (T, T) {
 	return mi, ma
 }
 
-func Max[T Ordered](vals ...T) T {
+func Max[T constraints.Ordered](vals ...T) T {
 	ma := vals[0]
 	for _, v := range vals[1:] {
 		if v > ma {
@@ -136,7 +140,7 @@ func Max[T Ordered](vals ...T) T {
 	return ma
 }
 
-func Min[T Ordered](vals ...T) T {
+func Min[T constraints.Ordered](vals ...T) T {
 	mi := vals[0]
 	for _, v := range vals[1:] {
 		if v < mi {
@@ -147,7 +151,7 @@ func Min[T Ordered](vals ...T) T {
 }
 
 // Sum returns sum of vals
-func Sum[T Ordered](vals ...T) T {
+func Sum[T constraints.Ordered](vals ...T) T {
 	var sum T
 	for _, v := range vals {
 		sum += v

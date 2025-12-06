@@ -1,5 +1,7 @@
 package main
 
+import "golang.org/x/exp/constraints"
+
 type LessFunc[T any] func(a, b T) bool
 
 // heaapImpl はヒープの実装
@@ -12,7 +14,7 @@ func NewPriorityQueueWithLessFunc[T any](less LessFunc[T]) *PriorityQueue[T] {
 	return &PriorityQueue[T]{data: []T{}, less: less}
 }
 
-func NewPriorityQueue[T Ordered]() *PriorityQueue[T] {
+func NewPriorityQueue[T constraints.Ordered]() *PriorityQueue[T] {
 	return &PriorityQueue[T]{data: []T{}, less: func(a, b T) bool { return a < b }}
 }
 
