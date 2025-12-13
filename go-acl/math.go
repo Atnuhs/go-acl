@@ -191,12 +191,12 @@ func IsPrime(x int) bool {
 // Factorize is O(Sqrt(N))
 // got, ret
 // 6, []Pair{{2,1}, {3.1}}
-func Factorize(x int) []*Pair[int, int] {
+func Factorize(x int) []Pair[int, int] {
 	if x <= 1 {
-		return []*Pair[int, int]{}
+		return []Pair[int, int]{}
 	}
 
-	ret := make([]*Pair[int, int], 0)
+	ret := make([]Pair[int, int], 0)
 	n := x
 
 	// Handle factor 2
@@ -297,7 +297,7 @@ func Divisors(x int) []int {
 // 1 => 1
 // 2 => 2
 // 10 => 4
-func CountDivisors(pairs []*Pair[int, int]) int {
+func CountDivisors(pairs []Pair[int, int]) int {
 	ans := 1
 	for _, pe := range pairs {
 		ans *= (pe.V + 1)

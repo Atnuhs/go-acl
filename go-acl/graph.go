@@ -2,6 +2,21 @@ package main
 
 import "sort"
 
+// ReadGraph は頂点数n, 辺数mを受け取り、u_i, v_iの情報からjag配列でグラフを構築する
+func ReadGraph(n, m int, direction bool) [][]int {
+	g := make([][]int, n)
+	for i := 0; i < m; i++ {
+		u, v := II()
+		u--
+		v--
+		g[u] = append(g[u], v)
+		if !direction {
+			g[v] = append(g[v], u)
+		}
+	}
+	return g
+}
+
 // WEdge は重み付き辺を表す構造体
 type WEdge struct {
 	From, To, Weight int

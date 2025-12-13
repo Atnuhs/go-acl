@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -35,6 +34,18 @@ var (
 type Entry[K constraints.Ordered, V any] struct {
 	K K
 	V V
+}
+
+func S2i(s string) int {
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+func I2s(i int) string {
+	return fmt.Sprint(i)
 }
 
 func InRange(x, l, r int) bool {
@@ -92,7 +103,11 @@ func F3[T any](vals [][][]T, fill T) {
 
 // Jag は長さNのJagged配列を生成する
 func Jag[T any](n int) [][]T {
-	return L2[T](n, 0)
+	ret := make([][]T, n)
+	for i := range ret {
+		ret[i] = make([]T, 0, 10)
+	}
+	return ret
 }
 
 // S は文字列を読み込む
@@ -177,8 +192,8 @@ func IIIIs(n int) ([]int, []int, []int, []int) {
 	return a, b, c, d
 }
 
-// I2s は整数をh行w列の配列として読み込む
-func I2s(h, w int) [][]int {
+// ReadGrid は整数をh行w列の配列として読み込む
+func ReadGrid(h, w int) [][]int {
 	ret := L2[int](h, w)
 	for i := range ret {
 		for j := range ret[i] {
@@ -500,7 +515,23 @@ func SortIdxE[K constraints.Ordered, V any](arr []Entry[K, V]) []int {
 }
 
 func Pow(x, e int) int {
-	return int(math.Pow(float64(x), float64(e)))
+	ret := 1
+	for e > 0 {
+		if e&1 == 1 {
+			ret *= x
+		}
+		x *= x
+		e >>= 1
+	}
+	return ret
+}
+
+func Pow10(e int) int {
+	ret := 1
+	for i := 0; i < e; i++ {
+		ret *= 10
+	}
+	return ret
 }
 
 type Ok[T any] func(x T) bool

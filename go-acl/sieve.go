@@ -84,8 +84,8 @@ func (mf MinFactorTable) IsPrime(x int) bool {
 // 返り値は素因数とその指数のPairのスライス
 // 例）got, ret
 // 6, []Pair{{2,1}, {3.1}}
-func (mf MinFactorTable) Factorize(x int) []*Pair[int, int] {
-	ret := make([]*Pair[int, int], 0)
+func (mf MinFactorTable) Factorize(x int) []Pair[int, int] {
+	ret := make([]Pair[int, int], 0)
 	n := x
 	for n > 1 {
 		p := mf[n]

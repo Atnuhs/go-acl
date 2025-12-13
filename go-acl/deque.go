@@ -74,14 +74,13 @@ func (d *Deque[T]) PushBack(v T) {
 	d.r = d.next(d.r)
 }
 
-func (d *Deque[T]) PopFront() (T, bool) {
-	var zero T
+func (d *Deque[T]) PopFront() T {
 	if d.isEmpty() {
-		return zero, false
+		panic("Deque PopFront deque is empty")
 	}
 	v := d.buf[d.l]
 	d.l = d.next(d.l)
-	return v, true
+	return v
 }
 
 func (d *Deque[T]) PopBack() (T, bool) {

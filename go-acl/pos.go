@@ -38,7 +38,7 @@ func (p Pos) Neighbors8() []Pos {
 	}
 }
 
-func (p Pos) Neighbors4In(w, h int) []Pos {
+func (p Pos) Neighbors4In(h, w int) []Pos {
 	ret := make([]Pos, 0, 4)
 	for _, p := range p.Neighbors4() {
 		if InGrid(p, h, w) {
@@ -48,7 +48,7 @@ func (p Pos) Neighbors4In(w, h int) []Pos {
 	return ret
 }
 
-func (p Pos) Neighbors8In(w, h int) []Pos {
+func (p Pos) Neighbors8In(h, w int) []Pos {
 	ret := make([]Pos, 0, 8)
 	for _, p := range p.Neighbors8() {
 		if InGrid(p, h, w) {
