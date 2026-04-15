@@ -41,6 +41,7 @@ func (uf *UnionFind) Union(x, y int) {
 		return
 	}
 
+	// size(rx) >= size(ry)の状態にする
 	if uf.Size(rx) < uf.Size(ry) {
 		rx, ry = ry, rx
 	}

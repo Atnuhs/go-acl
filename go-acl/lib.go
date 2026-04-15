@@ -117,9 +117,9 @@ func S() string {
 	return ret
 }
 
-// R は文字列を[]runeとして読み込む
-func R() []rune {
-	return []rune(S())
+// B は文字列を[]byteとして読み込む
+func B() []byte {
+	return []byte(S())
 }
 
 func F() float64 {
@@ -212,11 +212,11 @@ func Ss(n int) []string {
 	return ret
 }
 
-// Rss は文字列をn個読み込む
-func Rs(n int) [][]rune {
-	ret := make([][]rune, n)
+// Bs は文字列をn個読み込む
+func Bs(n int) [][]byte {
+	ret := make([][]byte, n)
 	for i := range ret {
-		ret[i] = R()
+		ret[i] = B()
 	}
 	return ret
 }
@@ -229,36 +229,95 @@ func Fs(n int) []float64 {
 	return ret
 }
 
-// formatSlice はスライスを文字列に変換する
-func formatSlice[T any](slice []T, formatter func(T) string) {
-	for i, x := range slice {
+// Output
+
+func writeInt(v int) {
+	_, _ = Out.WriteString(strconv.Itoa(v))
+}
+
+func writeString(v string) {
+	_, _ = Out.WriteString(v)
+}
+
+func writeFloat64(v float64) {
+	_, _ = Out.WriteString(strconv.FormatFloat(v, 'f', 14, 64))
+}
+
+func writeByte(v byte) {
+	_ = Out.WriteByte(v)
+}
+
+func writeByteSlice(v []byte) {
+	_, _ = Out.Write(v)
+}
+
+func writeByteGrid(g [][]byte) {
+	for i, row := range g {
 		if i > 0 {
-			fmt.Fprint(Out, " ")
+			_ = Out.WriteByte('\n')
 		}
-		fmt.Fprint(Out, formatter(x))
+		writeByteSlice(row)
+	}
+}
+
+func writeSlice[T any](s []T, writeElem func(T)) {
+	for i, x := range s {
+		if i > 0 {
+			_ = Out.WriteByte(' ')
+		}
+		writeElem(x)
+	}
+}
+
+func writeGrid[T any](g [][]T, writeElem func(T)) {
+	for i, row := range g {
+		if i > 0 {
+			_ = Out.WriteByte('\n')
+		}
+		writeSlice(row, writeElem)
+	}
+}
+
+func writeOne(v any) {
+	switch x := v.(type) {
+	case int:
+		writeInt(x)
+	case string:
+		writeString(x)
+	case float64:
+		writeFloat64(x)
+	case byte:
+		writeByte(x)
+	case []int:
+		writeSlice(x, writeInt)
+	case []string:
+		writeSlice(x, writeString)
+	case []float64:
+		writeSlice(x, writeFloat64)
+	case []byte:
+		writeByteSlice(x)
+	case [][]int:
+		writeGrid(x, writeInt)
+	case [][]string:
+		writeGrid(x, writeString)
+	case [][]float64:
+		writeGrid(x, writeFloat64)
+	case [][]byte:
+		writeByteGrid(x)
+	default:
+		fmt.Fprint(Out, x)
 	}
 }
 
 // Ans は出力を行う
 func Ans(args ...any) {
 	for i, arg := range args {
-		switch v := arg.(type) {
-		case float64:
-			fmt.Fprintf(Out, "%.14f", v)
-		case []int:
-			formatSlice(v, func(x int) string { return fmt.Sprintf("%d", x) })
-		case []string:
-			formatSlice(v, func(x string) string { return x })
-		case []float64:
-			formatSlice(v, func(x float64) string { return fmt.Sprintf("%.14f", x) })
-		default:
-			fmt.Fprint(Out, v)
+		if i > 0 {
+			_ = Out.WriteByte(' ')
 		}
-		if i < len(args)-1 {
-			fmt.Fprint(Out, " ")
-		}
+		writeOne(arg)
 	}
-	fmt.Fprintln(Out)
+	_ = Out.WriteByte('\n')
 }
 
 // Yes は"Yes"を出力する

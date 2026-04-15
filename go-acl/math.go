@@ -305,6 +305,14 @@ func CountDivisors(pairs []Pair[int, int]) int {
 	return ans
 }
 
+// CeilDiv は a / bの切り上げを返す
+func CeilDiv(a, b int) int {
+	if b <= 0 {
+		panic("b must be > 0")
+	}
+	return (a + b - 1) / b
+}
+
 // CeilPow2はx以上の最小の2冪を返す
 func CeilPow2(x int) int {
 	ret := 1

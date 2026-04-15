@@ -2,67 +2,77 @@ package main
 
 import "sort"
 
-// ReadGraph は頂点数n, 辺数mを受け取り、u_i, v_iの情報からjag配列でグラフを構築する
-func ReadGraph(n, m int, direction bool) [][]int {
+// AdjEdge は重み付き隣接リストの要素を表す。
+// to は接続先頂点、weight は辺の重み。
+type AdjEdge struct {
+	To, Weight int
+}
+
+// FullEdge は辺集合として扱う重み付き辺を表す。
+// Kruskal などで使う。
+type FullEdge struct {
+	From, To, Weight int
+}
+
+// ReadAdjList は頂点数 n, 辺数 m を受け取り、
+// 入力された u_i, v_i から隣接リストを構築する。
+// directed=false のとき無向グラフとして扱う。
+func ReadAdjList(n, m int, directed bool) [][]int {
 	g := make([][]int, n)
 	for i := 0; i < m; i++ {
 		u, v := II()
 		u--
 		v--
+
 		g[u] = append(g[u], v)
-		if !direction {
+		if !directed {
 			g[v] = append(g[v], u)
 		}
 	}
 	return g
 }
 
-// WEdge は重み付き辺を表す構造体
-type WEdge struct {
-	From, To, Weight int
-}
+// ReadWeightedAdjList は頂点数 n, 辺数 m を受け取り、
+// 入力された u_i, v_i, w_i から重み付き隣接リストを構築する。
+// directed=false のとき無向グラフとして扱う。
+func ReadWeightedAdjList(n, m int, directed bool) [][]AdjEdge {
+	g := make([][]AdjEdge, n)
+	for i := 0; i < m; i++ {
+		u, v, w := III()
+		u--
+		v--
 
-// NewWEdge は新しい重み付き辺を生成する
-func NewWEdge(from, to, weight int) *WEdge {
-	return &WEdge{
-		From:   from,
-		To:     to,
-		Weight: weight,
+		g[u] = append(g[u], AdjEdge{To: v, Weight: w})
+		if !directed {
+			g[v] = append(g[v], AdjEdge{To: u, Weight: w})
+		}
 	}
+	return g
 }
 
-// Kruskal はクラスカル法を用いて最小全域木を求める
-// 最小全域木 (MST: Minimum Spanning Tree) とは:
-//   - 無向・重み付きグラフの全ての頂点を結びつける木 (辺は n-1 本)
-//   - その中で「辺の重み合計」が最小になるもの
-//
-// 例:
-//   - 村を最小コストで道路で全部つなぐ
-//   - 島を橋で結んで総工費を最小化
-//   - グループをK個に分けたい → MSTを作って重い辺をK−1本切る
-//   - 2点間の「経路中の最大コスト」を最小化したい → MST上で見る
-func Kruskal(n int, edges []*WEdge) (int, []*WEdge) {
-	// はじめに辺を重みでソートする
+// Kruskal はクラスカル法を用いて最小全域木を求める。
+// 返り値は (最小コスト, 採用した辺一覧)。
+// 連結でない場合は (-1, nil) を返す。
+func Kruskal(n int, edges []*FullEdge) (int, []*FullEdge) {
 	sort.Slice(edges, func(i, j int) bool {
 		return edges[i].Weight < edges[j].Weight
 	})
 
-	// その後、Union-Findを用いて最小全域木を求める
 	uf := NewUnionFind(n)
-	ret := make([]*WEdge, 0)
-	sum := 0
+	mst := make([]*FullEdge, 0, n-1)
+	total := 0
 
-	// すべての辺を調べる
 	for _, e := range edges {
 		if uf.Family(e.From, e.To) {
 			continue
 		}
-		ret = append(ret, e)
-		sum += e.Weight
 		uf.Union(e.From, e.To)
+		mst = append(mst, e)
+		total += e.Weight
 	}
+
 	if uf.Size(0) != n {
 		return -1, nil
 	}
-	return sum, ret
+	return total, mst
 }
