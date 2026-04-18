@@ -1,9 +1,8 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
-
-	"golang.org/x/exp/constraints"
 )
 
 // lIdxは左の兄弟
@@ -32,12 +31,12 @@ func cIdx(idx int) int {
 
 // DEPQ は二重優先度キューの実装
 // 二重優先度キューは、最大値と最小値をO(logN)で取得できるデータ構造
-type DEPQ[T constraints.Ordered] struct {
+type DEPQ[T cmp.Ordered] struct {
 	values []T
 }
 
 // NewDEPQ は二重優先度キューを初期化する
-func NewDEPQ[T constraints.Ordered](values ...T) *DEPQ[T] {
+func NewDEPQ[T cmp.Ordered](values ...T) *DEPQ[T] {
 	pq := &DEPQ[T]{
 		values: values,
 	}
@@ -153,7 +152,7 @@ func (pq *DEPQ[T]) Size() int {
 	return len(pq.values)
 }
 
-func (pq *DEPQ[T]) Empty() bool {
+func (pq *DEPQ[T]) IsEmpty() bool {
 	return len(pq.values) == 0
 }
 
@@ -163,14 +162,14 @@ func (pq *DEPQ[T]) Push(x T) {
 }
 
 func (pq *DEPQ[T]) GetMax() T {
-	if pq.Empty() {
+	if pq.IsEmpty() {
 		panic(ErrEmptyContainer)
 	}
 	return pq.values[0]
 }
 
 func (pq *DEPQ[T]) GetMin() T {
-	if pq.Empty() {
+	if pq.IsEmpty() {
 		panic(ErrEmptyContainer)
 	}
 	if pq.Size() < 2 {
@@ -180,7 +179,7 @@ func (pq *DEPQ[T]) GetMin() T {
 }
 
 func (pq *DEPQ[T]) PopMax() T {
-	if pq.Empty() {
+	if pq.IsEmpty() {
 		panic(ErrEmptyContainer)
 	}
 	ret := pq.values[0]
@@ -191,7 +190,7 @@ func (pq *DEPQ[T]) PopMax() T {
 }
 
 func (pq *DEPQ[T]) PopMin() T {
-	if pq.Empty() {
+	if pq.IsEmpty() {
 		panic(ErrEmptyContainer)
 	}
 	if pq.Size() == 1 {

@@ -1,6 +1,6 @@
 package main
 
-import "golang.org/x/exp/constraints"
+import "cmp"
 
 type LessFunc[T any] func(a, b T) bool
 
@@ -14,7 +14,7 @@ func NewPriorityQueueWithLessFunc[T any](less LessFunc[T]) *PriorityQueue[T] {
 	return &PriorityQueue[T]{data: []T{}, less: less}
 }
 
-func NewPriorityQueue[T constraints.Ordered]() *PriorityQueue[T] {
+func NewPriorityQueue[T cmp.Ordered]() *PriorityQueue[T] {
 	return &PriorityQueue[T]{data: []T{}, less: func(a, b T) bool { return a < b }}
 }
 

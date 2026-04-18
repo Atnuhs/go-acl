@@ -1,13 +1,13 @@
 package main
 
 import (
+	stdcmp "cmp"
 	"fmt"
 	"math/rand"
 	"testing"
 
 	"github.com/Atnuhs/atcoder-cui/go-acl/testlib"
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/exp/constraints"
 )
 
 func Test_lIdx(t *testing.T) {
@@ -170,7 +170,7 @@ func Fuzz_cIdx(f *testing.F) {
 	})
 }
 
-func check_heap[T constraints.Ordered](t *testing.T, pq *DEPQ[T]) {
+func check_heap[T stdcmp.Ordered](t *testing.T, pq *DEPQ[T]) {
 	t.Helper()
 	for i := range pq.values {
 		cl := cIdx(i)
@@ -254,7 +254,7 @@ func TestDEPQ_PopMax(t *testing.T) {
 	}
 	pq := NewDEPQ(values...)
 	got := make([]int, 0, len(want))
-	for !pq.Empty() {
+	for !pq.IsEmpty() {
 		got = append(got, pq.PopMax())
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
@@ -268,7 +268,7 @@ func TestDEPQ_PopMin(t *testing.T) {
 	copy(want, values)
 	pq := NewDEPQ(values...)
 	got := make([]int, 0, len(want))
-	for !pq.Empty() {
+	for !pq.IsEmpty() {
 		got = append(got, pq.PopMin())
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
@@ -302,7 +302,7 @@ func TestDEPQ_EmptyOperations(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			pq := tc.setup()
-			got := pq.Empty()
+			got := pq.IsEmpty()
 			testlib.AclAssert(t, tc.want, got)
 		})
 	}
@@ -394,7 +394,7 @@ func FuzzDEPQ(f *testing.F) {
 		}
 
 		// PopTest
-		for !dpq.Empty() {
+		for !dpq.IsEmpty() {
 			q := rand.Intn(2)
 			switch q {
 			case 0:
@@ -423,7 +423,7 @@ func TestDEPQ_EdgeCasesOperations(t *testing.T) {
 
 		min := pq.PopMin()
 		testlib.AclAssert(t, 42, min)
-		testlib.AclAssert(t, true, pq.Empty())
+		testlib.AclAssert(t, true, pq.IsEmpty())
 	})
 
 	t.Run("two element operations", func(t *testing.T) {
@@ -453,9 +453,9 @@ func BenchmarkDEPQ_PushPop(b *testing.B) {
 		for _, v := range vs {
 			pq.Push(v)
 		}
-		for !pq.Empty() {
+		for !pq.IsEmpty() {
 			_ = pq.PopMin()
-			if !pq.Empty() {
+			if !pq.IsEmpty() {
 				_ = pq.PopMax()
 			}
 		}

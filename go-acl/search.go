@@ -72,7 +72,7 @@ func CombIdxEnum(n, k int) Enum {
 			}
 
 			for i := start; i <= n-(k-pos); i++ {
-				buf[pos] = 1
+				buf[pos] = i
 				if !dfs(pos+1, i+1) {
 					return false
 				}

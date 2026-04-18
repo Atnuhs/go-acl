@@ -79,7 +79,7 @@ func GridAt[T any](p Pos, g [][]T) T {
 func FuncSort(p []Pos) func(i, j int) bool {
 	return func(i, j int) bool {
 		if p[i].H != p[j].H {
-			return p[i].H < p[j].W
+			return p[i].H < p[j].H
 		}
 		return p[i].W < p[j].W
 	}

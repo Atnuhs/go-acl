@@ -1,9 +1,8 @@
 package main
 
 import (
+	"cmp"
 	"math"
-
-	"golang.org/x/exp/constraints"
 )
 
 // return x! % mod with O(x)
@@ -117,7 +116,7 @@ func NextPerm(a []int) bool {
 }
 
 // Extrema returns min, max
-func Extrema[T constraints.Ordered](vals ...T) (T, T) {
+func Extrema[T cmp.Ordered](vals ...T) (T, T) {
 	mi, ma := vals[0], vals[0]
 	for _, v := range vals {
 		if v < mi {
@@ -130,7 +129,7 @@ func Extrema[T constraints.Ordered](vals ...T) (T, T) {
 	return mi, ma
 }
 
-func Max[T constraints.Ordered](vals ...T) T {
+func Max[T cmp.Ordered](vals ...T) T {
 	ma := vals[0]
 	for _, v := range vals[1:] {
 		if v > ma {
@@ -140,7 +139,7 @@ func Max[T constraints.Ordered](vals ...T) T {
 	return ma
 }
 
-func Min[T constraints.Ordered](vals ...T) T {
+func Min[T cmp.Ordered](vals ...T) T {
 	mi := vals[0]
 	for _, v := range vals[1:] {
 		if v < mi {
@@ -151,7 +150,7 @@ func Min[T constraints.Ordered](vals ...T) T {
 }
 
 // Sum returns sum of vals
-func Sum[T constraints.Ordered](vals ...T) T {
+func Sum[T cmp.Ordered](vals ...T) T {
 	var sum T
 	for _, v := range vals {
 		sum += v
@@ -318,6 +317,26 @@ func CeilPow2(x int) int {
 	ret := 1
 	for ret < x {
 		ret <<= 1
+	}
+	return ret
+}
+
+func Pow(x, e int) int {
+	ret := 1
+	for e > 0 {
+		if e&1 == 1 {
+			ret *= x
+		}
+		x *= x
+		e >>= 1
+	}
+	return ret
+}
+
+func Pow10(e int) int {
+	ret := 1
+	for i := 0; i < e; i++ {
+		ret *= 10
 	}
 	return ret
 }
