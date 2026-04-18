@@ -45,6 +45,23 @@ func (na *NaiveArray) Get(i int) int {
 	return na.data[i]
 }
 
+func (na *NaiveArray) RangeMin(l, r int) int {
+	const INF = 1 << 60
+	min := INF
+	for i := l; i < r; i++ {
+		if na.data[i] < min {
+			min = na.data[i]
+		}
+	}
+	return min
+}
+
+func (na *NaiveArray) RangeSet(l, r, val int) {
+	for i := l; i < r; i++ {
+		na.data[i] = val
+	}
+}
+
 // テスト: 区間加算・区間和
 func TestLazySegTreeRangeAddRangeSum(t *testing.T) {
 	rand.Seed(42)
@@ -148,6 +165,176 @@ func TestLazySegTreeGet(t *testing.T) {
 			if expected != got {
 				t.Fatalf("Trial %d, Query %d: Get(%d) = %d, want %d",
 					trial, q, i, got, expected)
+			}
+		}
+	}
+}
+
+// テスト: 区間加算・区間最小値
+func TestLazySegTreeRangeAddRangeMin(t *testing.T) {
+	rand.Seed(45)
+
+	for trial := 0; trial < 100; trial++ {
+		n := rand.Intn(50) + 1
+		data := make([]int, n)
+		for i := range data {
+			data[i] = rand.Intn(100) - 50
+		}
+
+		naive := NewNaiveArray(data)
+		lst := NewLazySegmentTree(data, LazyMoRangeAddRangeMin())
+
+		for q := 0; q < 100; q++ {
+			l := rand.Intn(n)
+			r := rand.Intn(n-l) + l + 1
+
+			if rand.Intn(2) == 0 {
+				val := rand.Intn(100) - 50
+				naive.RangeAdd(l, r, val)
+				lst.Apply(l, r, val)
+			} else {
+				expected := naive.RangeMin(l, r)
+				got := lst.Query(l, r)
+				if expected != got {
+					t.Fatalf("Trial %d, Query %d: RangeMin(%d, %d) = %d, want %d",
+						trial, q, l, r, got, expected)
+				}
+			}
+		}
+	}
+}
+
+// テスト: 区間更新・区間和
+func TestLazySegTreeRangeUpdateRangeSum(t *testing.T) {
+	rand.Seed(46)
+
+	for trial := 0; trial < 100; trial++ {
+		n := rand.Intn(50) + 1
+		data := make([]int, n)
+		for i := range data {
+			data[i] = rand.Intn(100) - 50
+		}
+
+		naive := NewNaiveArray(data)
+		lst := NewLazySegmentTree(data, LazyMoRangeUpdateRangeSum[int]())
+
+		for q := 0; q < 100; q++ {
+			l := rand.Intn(n)
+			r := rand.Intn(n-l) + l + 1
+
+			if rand.Intn(2) == 0 {
+				val := rand.Intn(100) - 50
+				naive.RangeSet(l, r, val)
+				lst.Apply(l, r, &val)
+			} else {
+				expected := naive.RangeSum(l, r)
+				got := lst.Query(l, r)
+				if expected != got {
+					t.Fatalf("Trial %d, Query %d: RangeUpdateSum(%d, %d) = %d, want %d",
+						trial, q, l, r, got, expected)
+				}
+			}
+		}
+	}
+}
+
+// テスト: 区間更新・区間最大値
+func TestLazySegTreeRangeUpdateRangeMax(t *testing.T) {
+	rand.Seed(47)
+
+	for trial := 0; trial < 100; trial++ {
+		n := rand.Intn(50) + 1
+		data := make([]int, n)
+		for i := range data {
+			data[i] = rand.Intn(100) - 50
+		}
+
+		naive := NewNaiveArray(data)
+		lst := NewLazySegmentTree(data, LazyMoRangeUpdateRangeMax())
+
+		for q := 0; q < 100; q++ {
+			l := rand.Intn(n)
+			r := rand.Intn(n-l) + l + 1
+
+			if rand.Intn(2) == 0 {
+				val := rand.Intn(100) - 50
+				naive.RangeSet(l, r, val)
+				lst.Apply(l, r, &val)
+			} else {
+				expected := naive.RangeMax(l, r)
+				got := lst.Query(l, r)
+				if expected != got {
+					t.Fatalf("Trial %d, Query %d: RangeUpdateMax(%d, %d) = %d, want %d",
+						trial, q, l, r, got, expected)
+				}
+			}
+		}
+	}
+}
+
+// テスト: 区間更新・区間最小値
+func TestLazySegTreeRangeUpdateRangeMin(t *testing.T) {
+	rand.Seed(48)
+
+	for trial := 0; trial < 100; trial++ {
+		n := rand.Intn(50) + 1
+		data := make([]int, n)
+		for i := range data {
+			data[i] = rand.Intn(100) - 50
+		}
+
+		naive := NewNaiveArray(data)
+		lst := NewLazySegmentTree(data, LazyMoRangeUpdateRangeMin())
+
+		for q := 0; q < 100; q++ {
+			l := rand.Intn(n)
+			r := rand.Intn(n-l) + l + 1
+
+			if rand.Intn(2) == 0 {
+				val := rand.Intn(100) - 50
+				naive.RangeSet(l, r, val)
+				lst.Apply(l, r, &val)
+			} else {
+				expected := naive.RangeMin(l, r)
+				got := lst.Query(l, r)
+				if expected != got {
+					t.Fatalf("Trial %d, Query %d: RangeUpdateMin(%d, %d) = %d, want %d",
+						trial, q, l, r, got, expected)
+				}
+			}
+		}
+	}
+}
+
+// テスト: Set()一点更新
+func TestLazySegTreeSet(t *testing.T) {
+	rand.Seed(49)
+
+	for trial := 0; trial < 50; trial++ {
+		n := rand.Intn(30) + 1
+		data := make([]int, n)
+		for i := range data {
+			data[i] = rand.Intn(100)
+		}
+
+		naive := NewNaiveArray(data)
+		lst := NewLazySegmentTree(data, LazyMoRangeAddRangeSum[int]())
+
+		for q := 0; q < 50; q++ {
+			i := rand.Intn(n)
+			val := rand.Intn(100)
+
+			naive.data[i] = val
+			lst.Set(i, val)
+
+			// クエリで検証
+			l := rand.Intn(n)
+			r := rand.Intn(n-l) + l + 1
+			expected := naive.RangeSum(l, r)
+			got := lst.Query(l, r)
+			if expected != got {
+				t.Fatalf("Trial %d, Query %d: after Set(%d,%d), RangeSum(%d,%d) = %d, want %d",
+					trial, q, i, val, l, r, got, expected)
 			}
 		}
 	}

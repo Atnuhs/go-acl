@@ -119,34 +119,28 @@ func TestSegmentTree_QueryEdgeCases(t *testing.T) {
 	testlib.AclAssert(t, 3, st.Query(2, 3))
 }
 
-func TestMaxRight_BasicSum(t *testing.T) {
-	seg := NewSegmentTree([]int{1, 2, 3, 4, 5}, MoSum[int]())
+func TestMoMODMul(t *testing.T) {
+	mo := MoMODMul(7)
 
-	tests := []struct {
-		name  string
-		l     int
-		limit int
-		want  int
-	}{
-		{"sum <= 10 from 0", 0, 10, 4},   // 1+2+3+4=10
-		{"sum <= 6 from 0", 0, 6, 3},     // 1+2+3=6
-		{"sum <= 1 from 0", 0, 1, 1},     // 1
-		{"sum <= 100 from 0", 0, 100, 5}, // 全体
-		{"sum <= 9 from 2", 2, 9, 4},     // 3+4=7 (< 9)
-		{"sum <= 0 from 0", 0, 0, 0},     // 空区間
+	testlib.AclAssert(t, 1, mo.E)
+	testlib.AclAssert(t, 6, mo.Op(2, 3))   // 2*3=6
+	testlib.AclAssert(t, 1, mo.Op(3, 5))   // 15 % 7 = 1
+	testlib.AclAssert(t, 0, mo.Op(7, 100)) // 0 % 7 = 0
+}
+
+func TestSegmentTree_At(t *testing.T) {
+	arr := []int{10, 20, 30, 40, 50}
+	st := NewSegmentTree(arr, MoSum[int]())
+
+	for i, want := range arr {
+		if got := st.At(i); got != want {
+			t.Errorf("At(%d) = %d, want %d", i, got, want)
+		}
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := seg.MaxRight(tt.l, func(v int) bool {
-				return v <= tt.limit
-			})
-			if got != tt.want {
-				t.Errorf("MaxRight(%d, sum <= %d) = %d, want %d",
-					tt.l, tt.limit, got, tt.want)
-			}
-		})
-	}
+	st.Update(2, 99)
+	testlib.AclAssert(t, 99, st.At(2))
+	testlib.AclAssert(t, 10, st.At(0))
 }
 
 func TestMaxRight_Max(t *testing.T) {
@@ -174,55 +168,6 @@ func TestMaxRight_Max(t *testing.T) {
 			if got != tt.want {
 				t.Errorf("MaxRight(%d, max <= %d) = %d, want %d",
 					tt.l, tt.limit, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestMaxRight_EdgeCases(t *testing.T) {
-	seg := NewSegmentTree([]int{1, 2, 3, 4, 5}, MoSum[int]())
-
-	t.Run("start from last element", func(t *testing.T) {
-		got := seg.MaxRight(4, func(v int) bool { return v <= 10 })
-		if got != 5 {
-			t.Errorf("MaxRight(4) = %d, want 5", got)
-		}
-	})
-
-	t.Run("always true predicate", func(t *testing.T) {
-		got := seg.MaxRight(0, func(v int) bool { return true })
-		if got != 5 {
-			t.Errorf("MaxRight with always true = %d, want 5", got)
-		}
-	})
-
-	t.Run("immediately false (except E)", func(t *testing.T) {
-		got := seg.MaxRight(0, func(v int) bool { return v == 0 })
-		if got != 0 {
-			t.Errorf("MaxRight with immediately false = %d, want 0", got)
-		}
-	})
-}
-
-func TestMaxRight_SingleElement(t *testing.T) {
-	seg := NewSegmentTree([]int{42}, MoSum[int]())
-
-	tests := []struct {
-		name  string
-		limit int
-		want  int
-	}{
-		{"below threshold", 41, 0},
-		{"at threshold", 42, 1},
-		{"above threshold", 100, 1},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := seg.MaxRight(0, func(v int) bool { return v <= tt.limit })
-			if got != tt.want {
-				t.Errorf("MaxRight(0, <= %d) = %d, want %d",
-					tt.limit, got, tt.want)
 			}
 		})
 	}

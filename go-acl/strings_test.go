@@ -11,7 +11,9 @@ func TestManacher(t *testing.T) {
 		s    string
 		want []int
 	}{
-		"odd": {s: "ababa", want: []int{1, 2, 3, 2, 1}},
+		"odd":        {s: "ababa", want: []int{1, 2, 3, 2, 1}},
+		"single":     {s: "a", want: []int{1}},
+		"all_same":   {s: "aaaa", want: []int{1, 2, 2, 1}},
 		// 偶数長の回文を検知できるようにしていないもの
 		"even": {s: "abba", want: []int{1, 1, 1, 1}},
 		// 偶数長の回文を検知できるように入力文字を$で挟んで細工したもの
