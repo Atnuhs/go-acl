@@ -1,5 +1,5 @@
 /solve/
 /problems/
 /submit/
-.env
-/templates/*
+*.out
+*.html

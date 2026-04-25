@@ -22,13 +22,13 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Download dependencies
-        working-directory: ./go-acl
+        working-directory: .
         run: go mod download
 
       - name: Build
-        working-directory: ./go-acl
+        working-directory: .
         run: go build ./...
 
       - name: Test
-        working-directory: ./go-acl
+        working-directory: .
         run: go test -race -count=1 ./...
