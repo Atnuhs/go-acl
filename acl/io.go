@@ -12,36 +12,68 @@ const (
 )
 
 var (
-	In  = bufio.NewReaderSize(os.Stdin, BufferSize)
 	Out = bufio.NewWriterSize(os.Stdout, BufferSize)
 	Dbg = bufio.NewWriterSize(os.Stderr, BufferSize)
+
+	in = bufio.NewReaderSize(os.Stdin, BufferSize)
 )
 
 // --- Input ---
 
+// readToken は空白をスキップして次のトークンのバイト列を返す
+func readToken() []byte {
+	c, err := in.ReadByte()
+	for err == nil && c <= ' ' {
+		c, err = in.ReadByte()
+	}
+	if err != nil {
+		return nil
+	}
+	buf := make([]byte, 0, 16)
+	for err == nil && c > ' ' {
+		buf = append(buf, c)
+		c, err = in.ReadByte()
+	}
+	return buf
+}
+
 // S は文字列を読み込む
 func S() string {
-	var ret string
-	fmt.Fscan(In, &ret)
-	return ret
+	return string(readToken())
 }
 
 // B は文字列を[]byteとして読み込む
 func B() []byte {
-	return []byte(S())
+	return readToken()
 }
 
 func F() float64 {
-	var ret float64
-	fmt.Fscan(In, &ret)
+	ret, _ := strconv.ParseFloat(string(readToken()), 64)
 	return ret
 }
 
 // I は整数を読み込む
 func I() int {
-	var ret int
-	fmt.Fscan(In, &ret)
-	return ret
+	c, err := in.ReadByte()
+	for err == nil && c <= ' ' {
+		c, err = in.ReadByte()
+	}
+	if err != nil {
+		return 0
+	}
+	neg := c == '-'
+	if neg {
+		c, err = in.ReadByte()
+	}
+	n := 0
+	for err == nil && '0' <= c && c <= '9' {
+		n = n*10 + int(c-'0')
+		c, err = in.ReadByte()
+	}
+	if neg {
+		return -n
+	}
+	return n
 }
 
 // II は整数を2つ読み込む
@@ -116,7 +148,7 @@ func ReadGrid(h, w int) [][]int {
 func Ss(n int) []string {
 	ret := L1[string](n)
 	for i := range ret {
-		fmt.Fscan(In, &ret[i])
+		ret[i] = S()
 	}
 	return ret
 }
@@ -133,7 +165,7 @@ func Bs(n int) [][]byte {
 func Fs(n int) []float64 {
 	ret := make([]float64, n)
 	for i := range ret {
-		fmt.Fscan(In, &ret[i])
+		ret[i] = F()
 	}
 	return ret
 }

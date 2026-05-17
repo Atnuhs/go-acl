@@ -35,12 +35,16 @@ func (b *BIT) Add(i, x int) {
 	}
 }
 
-// Prefixは[0, .., i]の和
-func (b *BIT) Prefix(i int) int {
-	i++
-	if i > b.n {
-		panic(fmt.Errorf("BIT.Prefix out of range r should be <= %d but got %d", b.n, i))
+// Sumは[l, r)の和を返す
+func (b *BIT) Sum(l, r int) int {
+	if l < 0 || r > b.n || l > r {
+		panic(fmt.Errorf("BIT.Sum out of range: must be 0 <= l <= r <= %d but got l=%d, r=%d", b.n, l, r))
 	}
+	return b.prefix(r) - b.prefix(l)
+}
+
+// prefixは内部用。a[0]+...+a[i-1] を返す（i は 1-indexed の終端）
+func (b *BIT) prefix(i int) int {
 	ret := 0
 	for i > 0 {
 		ret += b.data[i]
@@ -49,14 +53,14 @@ func (b *BIT) Prefix(i int) int {
 	return ret
 }
 
-// Rangeは[l, r)の和
-func (b *BIT) Range(l, r int) int {
-	return b.Prefix(r-1) - b.Prefix(l-1)
+// Prefixは[0, i]の和を返す
+func (b *BIT) Prefix(i int) int {
+	return b.Sum(0, i+1)
 }
 
-// Atは一点取得
+// Atはa[i]を返す
 func (b *BIT) At(i int) int {
-	return b.Prefix(i) - b.Prefix(i-1)
+	return b.Sum(i, i+1)
 }
 
 // SetはA[i]をvalに更新
@@ -67,13 +71,17 @@ func (b *BIT) Set(i, val int) {
 	}
 }
 
-// FirstTrueAtはf(a[i])がTrueとなるような最小のiを返す
-func (b *BIT) FirstTrueAt(f func(v int) bool) int {
+// MaxRightはf(Sum(0, r))がTrueとなるような最大のrを返す。
+// f(0)がTrue、かつf は単調 (True → False) であることを要求する。
+func (b *BIT) MaxRight(f func(v int) bool) int {
+	if b.n == 0 {
+		return 0
+	}
 	idx, sum := 0, 0
 	step := 1 << (bits.Len(uint(b.n)) - 1)
 	for step > 0 {
 		next := idx + step
-		if next <= b.n && !f(sum+b.data[next]) {
+		if next <= b.n && f(sum+b.data[next]) {
 			sum += b.data[next]
 			idx = next
 		}

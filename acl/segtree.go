@@ -41,7 +41,8 @@ func (t *SegmentTree[T]) Size() int {
 	return t.n
 }
 
-func (t *SegmentTree[T]) Update(i int, x T) {
+// SetはA[i]をxに更新
+func (t *SegmentTree[T]) Set(i int, x T) {
 	i += t.size
 	t.data[i] = x
 	for i > 0 {
@@ -87,11 +88,15 @@ func (t *SegmentTree[T]) dump() string {
 	return ret.String()
 }
 
-// MaxRightは[l, r)に対して、Query(l, r)がTrueとなるような最大のrを求める
-// ok(E)がTrueを返すことを要求する
+// MaxRightはok(Query(l, r))がTrueとなるような最大のrを返す。
+// ok(E)がTrueであり、okは単調 (True → False) であることを要求する。
+// 0 <= l <= Size() を許容し、l == Size() のとき Size() を返す。
 func (t *SegmentTree[T]) MaxRight(l int, ok Ok[T]) int {
-	if l < 0 || l >= t.n {
-		panic("MaxRight(l) l must be [0 <= l < t.Size()]")
+	if l < 0 || l > t.n {
+		panic(fmt.Errorf("MaxRight: l must be 0 <= l <= %d but got %d", t.n, l))
+	}
+	if l == t.n {
+		return t.n
 	}
 	if !ok(t.mo.E) {
 		return l
@@ -123,4 +128,39 @@ func (t *SegmentTree[T]) MaxRight(l int, ok Ok[T]) int {
 		}
 	}
 	return l - t.size
+}
+
+// MinLeftはok(Query(l, r))がTrueとなるような最小のlを返す。
+// ok(E)がTrueであり、okは単調 (l を減らす方向で True → False) であることを要求する。
+// 0 <= r <= Size() を許容し、r == 0 のとき 0 を返す。
+func (t *SegmentTree[T]) MinLeft(r int, ok Ok[T]) int {
+	if r < 0 || r > t.n {
+		panic(fmt.Errorf("MinLeft: r must be 0 <= r <= %d but got %d", t.n, r))
+	}
+	if r == 0 {
+		return 0
+	}
+	r += t.size
+	sm := t.mo.E
+	for {
+		r--
+		for r > 1 && (r&1) == 1 {
+			r >>= 1
+		}
+		if !ok(t.mo.Op(t.data[r], sm)) {
+			for r < t.size {
+				r = r<<1 | 1
+				if ok(t.mo.Op(t.data[r], sm)) {
+					sm = t.mo.Op(t.data[r], sm)
+					r--
+				}
+			}
+			return r + 1 - t.size
+		}
+		sm = t.mo.Op(t.data[r], sm)
+		if r&-r == r {
+			break
+		}
+	}
+	return 0
 }

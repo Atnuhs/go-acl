@@ -1,6 +1,9 @@
 package acl
 
-import "math/bits"
+import (
+	"fmt"
+	"math/bits"
+)
 
 type LazySegmentTree[S, F any] struct {
 	n      int
@@ -168,8 +171,8 @@ func (t *LazySegmentTree[S, F]) Query(l, r int) S {
 	return t.lm.Op(sml, smr)
 }
 
-// Getは一点取得
-func (t *LazySegmentTree[S, F]) Get(i int) S {
+// Atは一点取得
+func (t *LazySegmentTree[S, F]) At(i int) S {
 	return t.Query(i, i+1)
 }
 
@@ -184,4 +187,82 @@ func (t *LazySegmentTree[S, F]) Set(i int, x S) {
 	for i >>= 1; i >= 1; i >>= 1 {
 		t.pull(i)
 	}
+}
+
+// MaxRightはok(Query(l, r))がTrueとなるような最大のrを返す。
+// ok(E)がTrueであり、okは単調 (True → False) であることを要求する。
+// 0 <= l <= Size() を許容し、l == Size() のとき Size() を返す。
+func (t *LazySegmentTree[S, F]) MaxRight(l int, ok func(S) bool) int {
+	if l < 0 || l > t.n {
+		panic(fmt.Errorf("MaxRight: l must be 0 <= l <= %d but got %d", t.n, l))
+	}
+	if l == t.n {
+		return t.n
+	}
+	l += t.size
+	for i := t.rank; i >= 1; i-- {
+		t.push(l >> i)
+	}
+	sm := t.lm.E
+	for {
+		for l&1 == 0 {
+			l >>= 1
+		}
+		if !ok(t.lm.Op(sm, t.data[l])) {
+			for l < t.size {
+				t.push(l)
+				l <<= 1
+				if v := t.lm.Op(sm, t.data[l]); ok(v) {
+					sm = v
+					l++
+				}
+			}
+			return l - t.size
+		}
+		sm = t.lm.Op(sm, t.data[l])
+		l++
+		if l&-l == l {
+			break
+		}
+	}
+	return t.n
+}
+
+// MinLeftはok(Query(l, r))がTrueとなるような最小のlを返す。
+// ok(E)がTrueであり、okは単調 (l を減らす方向で True → False) であることを要求する。
+// 0 <= r <= Size() を許容し、r == 0 のとき 0 を返す。
+func (t *LazySegmentTree[S, F]) MinLeft(r int, ok func(S) bool) int {
+	if r < 0 || r > t.n {
+		panic(fmt.Errorf("MinLeft: r must be 0 <= r <= %d but got %d", t.n, r))
+	}
+	if r == 0 {
+		return 0
+	}
+	r += t.size
+	for i := t.rank; i >= 1; i-- {
+		t.push((r - 1) >> i)
+	}
+	sm := t.lm.E
+	for {
+		r--
+		for r > 1 && (r&1) == 1 {
+			r >>= 1
+		}
+		if !ok(t.lm.Op(t.data[r], sm)) {
+			for r < t.size {
+				t.push(r)
+				r = r<<1 | 1
+				if v := t.lm.Op(t.data[r], sm); ok(v) {
+					sm = v
+					r--
+				}
+			}
+			return r + 1 - t.size
+		}
+		sm = t.lm.Op(t.data[r], sm)
+		if r&-r == r {
+			break
+		}
+	}
+	return 0
 }

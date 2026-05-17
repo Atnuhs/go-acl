@@ -161,7 +161,7 @@ func TestLazySegTreeGet(t *testing.T) {
 			// ランダムな位置をチェック
 			i := rand.Intn(n)
 			expected := naive.Get(i)
-			got := lst.Get(i)
+			got := lst.At(i)
 			if expected != got {
 				t.Fatalf("Trial %d, Query %d: Get(%d) = %d, want %d",
 					trial, q, i, got, expected)
@@ -337,6 +337,67 @@ func TestLazySegTreeSet(t *testing.T) {
 					trial, q, i, val, l, r, got, expected)
 			}
 		}
+	}
+}
+
+// テスト: MaxRight/MinLeft
+func TestLazySegTreeMaxRightMinLeft(t *testing.T) {
+	data := []int{1, 2, 3, 4, 5}
+	lst := NewLazySegmentTree(data, LazyMoRangeAddRangeSum[int]())
+
+	for l := 0; l <= 5; l++ {
+		for limit := 0; limit <= 15; limit++ {
+			got := lst.MaxRight(l, func(v int) bool { return v <= limit })
+			want := l
+			sum := 0
+			for r := l; r < 5; r++ {
+				sum += data[r]
+				if sum <= limit {
+					want = r + 1
+				} else {
+					break
+				}
+			}
+			if got != want {
+				t.Errorf("MaxRight(%d, <=%d) = %d, want %d", l, limit, got, want)
+			}
+		}
+	}
+
+	for r := 0; r <= 5; r++ {
+		for limit := 0; limit <= 15; limit++ {
+			got := lst.MinLeft(r, func(v int) bool { return v <= limit })
+			want := r
+			sum := 0
+			for l := r - 1; l >= 0; l-- {
+				sum += data[l]
+				if sum <= limit {
+					want = l
+				} else {
+					break
+				}
+			}
+			if got != want {
+				t.Errorf("MinLeft(%d, <=%d) = %d, want %d", r, limit, got, want)
+			}
+		}
+	}
+}
+
+// テスト: Apply後のMaxRight (遅延伝播の確認)
+func TestLazySegTreeMaxRightAfterApply(t *testing.T) {
+	data := []int{1, 1, 1, 1, 1}
+	lst := NewLazySegmentTree(data, LazyMoRangeAddRangeSum[int]())
+	lst.Apply(0, 5, 2) // 全部3に: [3,3,3,3,3]
+
+	got := lst.MaxRight(0, func(v int) bool { return v <= 9 })
+	if got != 3 {
+		t.Errorf("MaxRight after apply: got %d, want 3", got)
+	}
+
+	got = lst.MinLeft(5, func(v int) bool { return v <= 9 })
+	if got != 2 {
+		t.Errorf("MinLeft after apply: got %d, want 2", got)
 	}
 }
 

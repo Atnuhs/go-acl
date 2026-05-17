@@ -95,12 +95,12 @@ func TestSegmentTree_Update(t *testing.T) {
 	testlib.AclAssert(t, 15, st.Query(0, 5))
 
 	// Update index 2 from 3 to 10
-	st.Update(2, 10)
+	st.Set(2, 10)
 	testlib.AclAssert(t, 22, st.Query(0, 5)) // 1+2+10+4+5 = 22
 	testlib.AclAssert(t, 12, st.Query(1, 3)) // 2+10 = 12
 
 	// Update index 0 from 1 to 0
-	st.Update(0, 0)
+	st.Set(0, 0)
 	testlib.AclAssert(t, 21, st.Query(0, 5)) // 0+2+10+4+5 = 21
 }
 
@@ -138,7 +138,7 @@ func TestSegmentTree_At(t *testing.T) {
 		}
 	}
 
-	st.Update(2, 99)
+	st.Set(2, 99)
 	testlib.AclAssert(t, 99, st.At(2))
 	testlib.AclAssert(t, 10, st.At(0))
 }
@@ -191,7 +191,14 @@ func TestMaxRight_Panic(t *testing.T) {
 				t.Error("Expected panic for out of bounds index")
 			}
 		}()
-		seg.MaxRight(3, func(v int) bool { return true })
+		seg.MaxRight(4, func(v int) bool { return true })
+	})
+
+	t.Run("l == n returns n", func(t *testing.T) {
+		got := seg.MaxRight(3, func(v int) bool { return true })
+		if got != 3 {
+			t.Errorf("MaxRight(3) = %d, want 3", got)
+		}
 	})
 }
 
@@ -281,4 +288,60 @@ func TestMaxRight_Detailed(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestMinLeft_Detailed(t *testing.T) {
+	data := []int{1, 2, 3, 4, 5}
+	seg := NewSegmentTree(data, MoSum[int]())
+
+	for r := 0; r <= 5; r++ {
+		for limit := 0; limit <= 15; limit++ {
+			got := seg.MinLeft(r, func(v int) bool { return v <= limit })
+
+			want := r
+			sum := 0
+			for l := r - 1; l >= 0; l-- {
+				sum += data[l]
+				if sum <= limit {
+					want = l
+				} else {
+					break
+				}
+			}
+
+			if got != want {
+				t.Errorf("data=%v, MinLeft(%d, <=%d) = %d, want %d",
+					data, r, limit, got, want)
+			}
+		}
+	}
+}
+
+func TestMinLeft_Panic(t *testing.T) {
+	seg := NewSegmentTree([]int{1, 2, 3}, MoSum[int]())
+
+	t.Run("negative index", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for negative index")
+			}
+		}()
+		seg.MinLeft(-1, func(v int) bool { return true })
+	})
+
+	t.Run("out of bounds index", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Error("Expected panic for out of bounds index")
+			}
+		}()
+		seg.MinLeft(4, func(v int) bool { return true })
+	})
+
+	t.Run("r == 0 returns 0", func(t *testing.T) {
+		got := seg.MinLeft(0, func(v int) bool { return true })
+		if got != 0 {
+			t.Errorf("MinLeft(0) = %d, want 0", got)
+		}
+	})
 }
