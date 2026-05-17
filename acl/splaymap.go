@@ -2,17 +2,17 @@ package acl
 
 import "cmp"
 
-// Splaymap は汎用的なスプレー木の実装
+// Splaymapはキー順に並んだmap型のスプレー木
 type Splaymap[K cmp.Ordered, V any] struct {
 	root *splaynode[K, V]
 }
 
-// NewSplaymap は新しいスプレー木を作成
+// NewSplaymapは新しいスプレー木を作成
 func NewSplaymap[K cmp.Ordered, V any]() *Splaymap[K, V] {
 	return &Splaymap[K, V]{}
 }
 
-// Size は要素数を返す
+// Sizeは要素数を返す
 func (st *Splaymap[K, V]) Size() int {
 	if st.root == nil {
 		return 0
@@ -20,13 +20,13 @@ func (st *Splaymap[K, V]) Size() int {
 	return st.root.size
 }
 
-// IsEmpty は空かどうかを返す
+// IsEmptyは空かどうかを返す
 func (st *Splaymap[K, V]) IsEmpty() bool {
 	return st.Size() == 0
 }
 
-// Has はキーで検索し、値と存在フラグを返す
-func (st *Splaymap[K, V]) Has(key K) (value V, found bool) {
+// Getはキーに対応する値と存在フラグを返す
+func (st *Splaymap[K, V]) Get(key K) (value V, found bool) {
 	if st.root == nil {
 		return
 	}
@@ -38,8 +38,9 @@ func (st *Splaymap[K, V]) Has(key K) (value V, found bool) {
 	return
 }
 
-// Insert はキーと値のペアを挿入
-func (st *Splaymap[K, V]) Insert(key K, value V) {
+// Setはキーと値のペアを設定する。
+// 既存キーなら値を更新、なければ新規挿入。
+func (st *Splaymap[K, V]) Set(key K, value V) {
 	L, R := split(st.root, key, SplitLE_GT)
 	if L != nil {
 		L = L.splayMax()
@@ -56,7 +57,7 @@ func (st *Splaymap[K, V]) Insert(key K, value V) {
 	st.root = merge(merge(L, newNode), R)
 }
 
-// Delete はキーで要素を削除
+// Deleteはキーで要素を削除し、削除できたかを返す
 func (st *Splaymap[K, V]) Delete(key K) (deleted bool) {
 	L, R := split(st.root, key, SplitLE_GT)
 	if L != nil {
@@ -76,8 +77,9 @@ func (st *Splaymap[K, V]) Delete(key K) (deleted bool) {
 	return
 }
 
-// Kthは[0, st.Size())の範囲内でk番目の要素を返す。
-func (st *Splaymap[K, V]) Kth(k int) (kk K, vv V, ok bool) {
+// Atは昇順でk番目(0-indexed)の要素を返す。
+// 範囲外ならok=false。
+func (st *Splaymap[K, V]) At(k int) (key K, value V, ok bool) {
 	if st.root == nil {
 		return
 	}
@@ -90,7 +92,9 @@ func (st *Splaymap[K, V]) Kth(k int) (kk K, vv V, ok bool) {
 	return st.root.key, st.root.value, true
 }
 
-func (st *Splaymap[K, V]) GtAt(key K) (idx int) {
+// FirstGtはkeyより大きい最小要素のindexを返す。
+// 存在しなければSize()を返す。要素はAt(FirstGt(key))で取得。
+func (st *Splaymap[K, V]) FirstGt(key K) (idx int) {
 	if st.root == nil {
 		return
 	}
@@ -102,7 +106,9 @@ func (st *Splaymap[K, V]) GtAt(key K) (idx int) {
 	return
 }
 
-func (st *Splaymap[K, V]) GeAt(key K) (idx int) {
+// FirstGeはkey以上の最小要素のindexを返す。
+// 存在しなければSize()を返す。要素はAt(FirstGe(key))で取得。
+func (st *Splaymap[K, V]) FirstGe(key K) (idx int) {
 	if st.root == nil {
 		return
 	}
@@ -114,32 +120,19 @@ func (st *Splaymap[K, V]) GeAt(key K) (idx int) {
 	return
 }
 
-func (st *Splaymap[K, V]) LtAt(key K) (idx int) {
-	idx = st.GeAt(key) - 1
-	return
-}
-func (st *Splaymap[K, V]) LeAt(key K) (idx int) {
-	idx = st.GtAt(key) - 1
-	return
+// LastLtはkeyより小さい最大要素のindexを返す。
+// 存在しなければ-1を返す。要素はAt(LastLt(key))で取得。
+func (st *Splaymap[K, V]) LastLt(key K) (idx int) {
+	return st.FirstGe(key) - 1
 }
 
-func (st *Splaymap[K, V]) Le(key K) (k K, v V, ok bool) {
-	return st.Kth(st.LeAt(key))
+// LastLeはkey以下の最大要素のindexを返す。
+// 存在しなければ-1を返す。要素はAt(LastLe(key))で取得。
+func (st *Splaymap[K, V]) LastLe(key K) (idx int) {
+	return st.FirstGt(key) - 1
 }
 
-func (st *Splaymap[K, V]) Lt(key K) (k K, v V, ok bool) {
-	return st.Kth(st.LtAt(key))
-}
-
-func (st *Splaymap[K, V]) Ge(key K) (k K, v V, ok bool) {
-	return st.Kth(st.GeAt(key))
-}
-
-func (st *Splaymap[K, V]) Gt(key K) (k K, v V, ok bool) {
-	return st.Kth(st.GtAt(key))
-}
-
-// InOrder は中順巡回でキーと値のペアを返す
+// InOrderは昇順でキーと値のペアを列挙して返す
 func (st *Splaymap[K, V]) InOrder() []Entry[K, V] {
 	if st.root == nil {
 		return nil

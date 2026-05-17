@@ -2,74 +2,56 @@ package acl
 
 import "cmp"
 
-func Bisect(ok, ng int, pred func(mid int) bool) int {
-	for Abs(ng-ok) > 1 {
-		mid := (ok + ng) >> 1
-		if pred(mid) {
-			ok = mid
+// FirstTrue は [lo, hi) の中で ok(i) が True となる最小の i を返す。
+// ok は (False → True) の方向で単調であることを要求する。
+// すべて False のときは hi を返す。
+func FirstTrue(lo, hi int, ok func(i int) bool) int {
+	for hi-lo > 0 {
+		m := int(uint(lo+hi) >> 1)
+		if ok(m) {
+			hi = m
 		} else {
-			ng = mid
+			lo = m + 1
 		}
 	}
-	return ok
+	return lo
 }
 
-// Geは昇順ソート済みの配列aに対して、x以上の要素の左端Indexを返す
-// aのすべての要素がxより小さい場合、len(a)を返す
-func Ge[T cmp.Ordered](a []T, x T) int {
-	ok, ng := len(a), -1
-	for ok-ng > 1 {
-		m := (ok + ng) >> 1
-		if x <= a[m] {
-			ok = m
+// LastTrue は [lo, hi) の中で ok(i) が True となる最大の i を返す。
+// ok は (True → False) の方向で単調であることを要求する。
+// すべて False のときは lo-1 を返す。
+func LastTrue(lo, hi int, ok func(i int) bool) int {
+	for hi-lo > 0 {
+		m := int(uint(lo+hi) >> 1)
+		if ok(m) {
+			lo = m + 1
 		} else {
-			ng = m
+			hi = m
 		}
 	}
-	return ok
+	return lo - 1
 }
 
-// Gtは昇順ソート済みの配列aに対して、xより大きい要素の左端Indexを返す
-// aのすべての要素がx以下の場合、len(a)を返す
-func Gt[T cmp.Ordered](a []T, x T) int {
-	ok, ng := len(a), -1
-	for ok-ng > 1 {
-		m := (ok + ng) >> 1
-		if x < a[m] {
-			ok = m
-		} else {
-			ng = m
-		}
-	}
-	return ok
+// FirstGe は昇順ソート済みの配列 a に対し、x 以上の要素の左端 index を返す。
+// すべての要素が x より小さい場合、len(a) を返す。
+func FirstGe[T cmp.Ordered](a []T, x T) int {
+	return FirstTrue(0, len(a), func(i int) bool { return a[i] >= x })
 }
 
-// Leは昇順ソート済みの配列aに対し、x以下の要素の右端Indexを返す
-// aのすべての要素がxより大きい場合、-1を返す
-func Le[T cmp.Ordered](a []T, x T) int {
-	ok, ng := -1, len(a)
-	for ng-ok > 1 {
-		m := (ok + ng) >> 1
-		if x >= a[m] {
-			ok = m
-		} else {
-			ng = m
-		}
-	}
-	return ok
+// FirstGt は昇順ソート済みの配列 a に対し、x より大きい要素の左端 index を返す。
+// すべての要素が x 以下の場合、len(a) を返す。
+func FirstGt[T cmp.Ordered](a []T, x T) int {
+	return FirstTrue(0, len(a), func(i int) bool { return a[i] > x })
 }
 
-// Ltは昇順ソート済みの配列aに対して、xより小さい要素の右端を返す
-// aのすべての要素がx以上の場合、-1を返す
-func Lt[T cmp.Ordered](a []T, x T) int {
-	ok, ng := -1, len(a)
-	for ng-ok > 1 {
-		m := (ok + ng) >> 1
-		if x > a[m] {
-			ok = m
-		} else {
-			ng = m
-		}
-	}
-	return ok
+// LastLe は昇順ソート済みの配列 a に対し、x 以下の要素の右端 index を返す。
+// すべての要素が x より大きい場合、-1 を返す。
+func LastLe[T cmp.Ordered](a []T, x T) int {
+	return LastTrue(0, len(a), func(i int) bool { return a[i] <= x })
+}
+
+// LastLt は昇順ソート済みの配列 a に対し、x より小さい要素の右端 index を返す。
+// すべての要素が x 以上の場合、-1 を返す。
+func LastLt[T cmp.Ordered](a []T, x T) int {
+	return LastTrue(0, len(a), func(i int) bool { return a[i] < x })
 }

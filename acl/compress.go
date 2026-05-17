@@ -1,8 +1,8 @@
 package acl
 
 import (
+	"slices"
 	"cmp"
-	"sort"
 )
 
 type Compress[T cmp.Ordered] struct {
@@ -13,7 +13,7 @@ type Compress[T cmp.Ordered] struct {
 func NewCompress[T cmp.Ordered](vals []T) *Compress[T] {
 	v := make([]T, len(vals))
 	copy(v, vals)
-	sort.Slice(v, func(i, j int) bool { return v[i] < v[j] })
+	slices.Sort(v)
 	v = Uniq(v)
 
 	m := make(map[T]int, len(v))

@@ -1,11 +1,13 @@
 package acl
 
+// Abelはアーベル群(可換群)。PartialUFの重みの代数構造として使う
 type Abel[T any] struct {
 	Add func(v1, v2 T) T
 	Sub func(v1, v2 T) T
 	E   T
 }
 
+// NewIntAbelは整数の加法アーベル群
 func NewIntAbel() *Abel[int] {
 	return &Abel[int]{
 		Add: func(v1, v2 int) int { return v1 + v2 },
@@ -14,6 +16,7 @@ func NewIntAbel() *Abel[int] {
 	}
 }
 
+// NewFloat64Abelはfloat64の加法アーベル群
 func NewFloat64Abel() *Abel[float64] {
 	return &Abel[float64]{
 		Add: func(v1, v2 float64) float64 { return v1 + v2 },
@@ -22,6 +25,7 @@ func NewFloat64Abel() *Abel[float64] {
 	}
 }
 
+// NewXorAbelはXOR群。逆元は自分自身
 func NewXorAbel() *Abel[int] {
 	return &Abel[int]{
 		Add: func(v1, v2 int) int { return v1 ^ v2 },
@@ -30,6 +34,7 @@ func NewXorAbel() *Abel[int] {
 	}
 }
 
+// NewModAbelはmod modの加法アーベル群
 func NewModAbel(mod int) *Abel[int] {
 	return &Abel[int]{
 		Add: func(v1, v2 int) int { return (v1 + v2) % mod },
@@ -38,18 +43,20 @@ func NewModAbel(mod int) *Abel[int] {
 	}
 }
 
+// Minusはvの逆元(E - v)を返す
 func (a *Abel[T]) Minus(v T) T {
 	return a.Sub(a.E, v)
 }
 
-// PartialUF
+// PartialUFは重み付きUnion-Find。
+// 各要素にアーベル群Tの重みを持たせ、同じ連結成分内で「重みの差」をO(α(N))で取得できる。
 type PartialUF[T any] struct {
-	par []int
-	dw  []T
+	par []int // par[x]<0 なら根(値は -size)、それ以外は親
+	dw  []T   // 親との重み差 dw[x] = weight[x] - weight[par[x]]
 	ab  *Abel[T]
 }
 
-// NewUnionFind は新しいUnion-Find木を生成する
+// NewPartialUFはn要素の重み付きUnion-Findを生成する
 func NewPartialUF[T any](n int, ab *Abel[T]) *PartialUF[T] {
 	par := make([]int, n)
 	dw := make([]T, n)
@@ -64,6 +71,7 @@ func NewPartialUF[T any](n int, ab *Abel[T]) *PartialUF[T] {
 	}
 }
 
+// Rootはxの根を返す。経路圧縮しつつdwも根からの累積差に更新する
 func (uf *PartialUF[T]) Root(x int) int {
 	if uf.par[x] < 0 {
 		return x
@@ -75,15 +83,20 @@ func (uf *PartialUF[T]) Root(x int) int {
 	}
 }
 
+// Familyはxとyが同じ連結成分に属するかを返す
 func (uf *PartialUF[T]) Family(x, y int) bool {
 	return uf.Root(x) == uf.Root(y)
 }
 
+// Sizeはxが属する連結成分のサイズを返す
 func (uf *PartialUF[T]) Size(x int) int {
 	return -uf.par[uf.Root(x)]
 }
 
+// Unionはxとyを連結し、weight[y] - weight[x] = w を制約として課す。
+// 既に同じ成分なら何もしない(矛盾検出は呼び出し側でDiffを比較する)。
 func (uf *PartialUF[T]) Union(x, y int, w T) {
+	// 根同士の重み差に変換: w' = w + weight[x] - weight[y]
 	w = uf.ab.Sub(uf.ab.Add(w, uf.Weight(x)), uf.Weight(y))
 
 	rx := uf.Root(x)
@@ -105,11 +118,14 @@ func (uf *PartialUF[T]) Union(x, y int, w T) {
 	uf.dw[ry] = w
 }
 
+// Weightはxの根からの累積重みを返す
 func (uf *PartialUF[T]) Weight(x int) T {
 	uf.Root(x)
 	return uf.dw[x]
 }
 
+// Diffは Weight(x) - Weight(y) を返す。
+// xとyが同じ成分でなければ結果は未定義(呼び出し側でFamilyを確認すること)。
 func (uf *PartialUF[T]) Diff(x, y int) T {
 	return uf.ab.Sub(uf.Weight(x), uf.Weight(y))
 }
