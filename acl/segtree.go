@@ -55,6 +55,14 @@ func (t *SegmentTree[T]) At(i int) T {
 	return t.Query(i, i+1)
 }
 
+func (t *SegmentTree[T]) ToSlice() []T {
+	ret := L1[T](t.Size())
+	for i := range t.Size() {
+		ret[i] = t.At(i)
+	}
+	return ret
+}
+
 // Queryは[l, r)の範囲でクエリ処理をする
 func (t *SegmentTree[T]) Query(l, r int) T {
 	l += t.size
@@ -79,7 +87,7 @@ func (t *SegmentTree[T]) dump() string {
 	ret := strings.Builder{}
 	l := 1 << 1
 	for i, v := range t.data[1:] {
-		ret.WriteString(fmt.Sprintf("%d:%v ", i+1, v))
+		fmt.Fprintf(&ret, "%d:%v ", i+1, v)
 		if i+2 == l {
 			ret.WriteString("\n")
 			l <<= 1

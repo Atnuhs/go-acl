@@ -176,6 +176,14 @@ func (t *LazySegmentTree[S, F]) At(i int) S {
 	return t.Query(i, i+1)
 }
 
+func (t *LazySegmentTree[S, F]) ToSlice() []S {
+	ret := L1[S](t.Size())
+	for i := range t.Size() {
+		ret[i] = t.At(i)
+	}
+	return ret
+}
+
 // Setは一点更新
 func (t *LazySegmentTree[S, F]) Set(i int, x S) {
 	i += t.size

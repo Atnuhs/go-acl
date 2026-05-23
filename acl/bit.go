@@ -89,3 +89,14 @@ func (b *BIT) MaxRight(f func(v int) bool) int {
 	}
 	return idx
 }
+func (b *BIT) Size() int {
+	return b.n
+}
+
+func (b *BIT) ToSlice() []int {
+	ret := L1[int](b.Size())
+	for i := range b.Size() {
+		ret[i] = b.At(i)
+	}
+	return ret
+}

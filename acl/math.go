@@ -42,7 +42,7 @@ func NewModFact(n, mod int) *ModFact {
 	return &ModFact{mod: mod, fact: fact, ifact: ifact}
 }
 
-// Fact returns n! mod p.
+// 【n!】Fact returns n! mod p. O(1)。n は前計算サイズ以下。
 func (f *ModFact) Fact(n int) int {
 	if n < 0 || n >= len(f.fact) {
 		return 0
@@ -50,7 +50,7 @@ func (f *ModFact) Fact(n int) int {
 	return f.fact[n]
 }
 
-// IFact returns (n!)^-1 mod p.
+// 【(n!)^-1】IFact returns (n!)^-1 mod p. O(1)。n は前計算サイズ以下。
 func (f *ModFact) IFact(n int) int {
 	if n < 0 || n >= len(f.ifact) {
 		return 0
@@ -58,7 +58,8 @@ func (f *ModFact) IFact(n int) int {
 	return f.ifact[n]
 }
 
-// Perm returns nPr mod p.
+// 【nPr / 順列】Perm returns nPr mod p. O(1)。
+// n, r ともに前計算サイズ以下のときに使う。
 func (f *ModFact) Perm(n, r int) int {
 	if r < 0 || n < r || n >= len(f.fact) {
 		return 0
@@ -66,12 +67,28 @@ func (f *ModFact) Perm(n, r int) int {
 	return f.fact[n] * f.ifact[n-r] % f.mod
 }
 
-// Comb returns nCr mod p.
+// 【nCr / 組合せ・通常版】Comb returns nCr mod p. O(1)。
+// n が前計算サイズ以下のときに使う（例: n <= 2*10^6）。
+// n が巨大なら CombBigN を使うこと。
 func (f *ModFact) Comb(n, r int) int {
 	if r < 0 || n < r || n >= len(f.fact) {
 		return 0
 	}
 	return f.fact[n] * f.ifact[r] % f.mod * f.ifact[n-r] % f.mod
+}
+
+// 【nCr / 組合せ・nが巨大版】CombBigN returns nCr mod p. O(r)。
+// n が前計算サイズを超えるが r は小さいとき用（例: n <= 10^18, r <= 10^5）。
+// 前計算は r 以上あればよい。n が小さいなら Comb の方が高速。
+func (f *ModFact) CombBigN(n, r int) int {
+	if r < 0 || n < r || r >= len(f.fact) {
+		return 0
+	}
+	ret := 1
+	for i := range r {
+		ret = (ret * (n - i)) % f.mod
+	}
+	return (ret * f.ifact[r]) % f.mod
 }
 
 // Stirling2 returns S(m,n) mod p in O(N log M).
@@ -92,6 +109,22 @@ func (f *ModFact) Stirling2(m, n int) int {
 		ret %= f.mod
 	}
 	return (ret * f.ifact[n]) % f.mod
+}
+
+// 【nCr / 組合せ・パスカル表版】CombTable returns table t where t[i][j] = iCj mod p (0<=i<=n, 0<=j<=r, j>i は 0)。
+// O(N*R) で表を構築、N*R <= 10^6 が目安。ModFact 不要・mod が合成数でも可。
+// 用途: 多くの (i,j) を引きたい / mod が素数でない / ModFact を作りたくないとき。
+// 単発の nCr なら Comb / CombBigN の方が軽い。
+func CombTable(n, r, mod int) [][]int {
+	t := L2[int](n+1, r+1)
+	for i := 0; i <= n; i++ {
+		t[i][0] = 1
+		upper := min(i, r)
+		for j := 1; j <= upper; j++ {
+			t[i][j] = (t[i-1][j-1] + t[i-1][j]) % mod
+		}
+	}
+	return t
 }
 
 // ModPow return x^e % mod in O(log x).
@@ -409,7 +442,7 @@ func Pow(x, e int) int {
 
 func Pow10(e int) int {
 	ret := 1
-	for i := 0; i < e; i++ {
+	for range e {
 		ret *= 10
 	}
 	return ret
