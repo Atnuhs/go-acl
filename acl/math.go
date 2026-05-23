@@ -20,7 +20,81 @@ func Factorial(x, mod int) int {
 	return ans
 }
 
-// ModPow return x^e % mod
+// ModFact precomputes n!, (n!)^-1 mod p in O(n). mod must be prime and > n.
+type ModFact struct {
+	mod   int
+	fact  []int
+	ifact []int
+}
+
+// NewModFact precomputes factorials up to n. mod must be prime and > n.
+func NewModFact(n, mod int) *ModFact {
+	fact := make([]int, n+1)
+	ifact := make([]int, n+1)
+	fact[0] = 1
+	for i := 1; i <= n; i++ {
+		fact[i] = fact[i-1] * i % mod
+	}
+	ifact[n] = ModPow(fact[n], mod-2, mod)
+	for i := n; i > 0; i-- {
+		ifact[i-1] = ifact[i] * i % mod
+	}
+	return &ModFact{mod: mod, fact: fact, ifact: ifact}
+}
+
+// Fact returns n! mod p.
+func (f *ModFact) Fact(n int) int {
+	if n < 0 || n >= len(f.fact) {
+		return 0
+	}
+	return f.fact[n]
+}
+
+// IFact returns (n!)^-1 mod p.
+func (f *ModFact) IFact(n int) int {
+	if n < 0 || n >= len(f.ifact) {
+		return 0
+	}
+	return f.ifact[n]
+}
+
+// Perm returns nPr mod p.
+func (f *ModFact) Perm(n, r int) int {
+	if r < 0 || n < r || n >= len(f.fact) {
+		return 0
+	}
+	return f.fact[n] * f.ifact[n-r] % f.mod
+}
+
+// Comb returns nCr mod p.
+func (f *ModFact) Comb(n, r int) int {
+	if r < 0 || n < r || n >= len(f.fact) {
+		return 0
+	}
+	return f.fact[n] * f.ifact[r] % f.mod * f.ifact[n-r] % f.mod
+}
+
+// Stirling2 returns S(m,n) mod p in O(N log M).
+// ModFact must be precomputed for at least n (i.e. NewModFact(>=n, mod)).
+func (f *ModFact) Stirling2(m, n int) int {
+	if n >= len(f.fact) {
+		panic("ModFact.Stirling2: n exceeds precomputed range")
+	}
+	// 包除原理を利用する
+	ret := 0
+	for k := 0; k <= n; k++ {
+		term := (f.Comb(n, k) * ModPow(n-k, m, f.mod)) % f.mod
+		if k&1 == 0 {
+			ret += term
+		} else {
+			ret += f.mod - term
+		}
+		ret %= f.mod
+	}
+	return (ret * f.ifact[n]) % f.mod
+}
+
+// ModPow return x^e % mod in O(log x).
 func ModPow(x, e, mod int) int {
 	if mod <= 1 {
 		return 0
@@ -339,4 +413,39 @@ func Pow10(e int) int {
 		ret *= 10
 	}
 	return ret
+}
+
+// Stirling2 はO(MN)で第2種スターリング数を計算する（MODなし）
+func Stirling2(m, n int) (int, []int) {
+	// 二次元DPを用いる（1次元化している）
+	// S(M,N) = S(m-1,n-1) + n * S(m-1,n)
+
+	dp := L1[int](n + 1)
+	dp[0] = 1
+	for range m {
+		for j := n; j > 0; j-- {
+			dp[j] = j*dp[j] + dp[j-1]
+		}
+		dp[0] = 0
+	}
+	return dp[n], dp
+}
+
+// Stirling2Mod はO(MN)で第2種スターリング数を計算する（MODあり）
+//
+//	M <= 10^6, N <= 10^6, MN <= 10^6まで対応。
+//	M <= 10^18, N <= 10^5 のような制約の場合は、ModFact のStirling2を使うこと
+func Stirling2Mod(m, n, mod int) (int, []int) {
+	// 二次元DPを用いる（1次元化している）
+	// S(M,N) = S(m-1,n-1) + n * S(m-1,n)
+
+	dp := L1[int](n + 1)
+	dp[0] = 1
+	for range m {
+		for j := n; j > 0; j-- {
+			dp[j] = ((j*dp[j])%mod + dp[j-1]) % mod
+		}
+		dp[0] = 0
+	}
+	return dp[n], dp
 }

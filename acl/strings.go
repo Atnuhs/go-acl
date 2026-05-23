@@ -25,3 +25,20 @@ func Manacher(s string) []int {
 	}
 	return rad
 }
+
+// kmpPrefix
+func kmpPrefix(p string) []int {
+	pi := L1[int](len(p))
+
+	j := 0
+	for i := 1; i < len(p); i++ {
+		for j > 0 && p[j] != p[i] {
+			j = pi[j-1]
+		}
+		if p[j] == p[i] {
+			j++
+		}
+		pi[i] = j
+	}
+	return pi
+}

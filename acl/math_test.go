@@ -1,9 +1,74 @@
 package acl
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 )
+
+func TestModFact(t *testing.T) {
+	const mod = 1000000007
+	f := NewModFact(20, mod)
+
+	if got, want := f.Fact(0), 1; got != want {
+		t.Errorf("Fact(0) = %d, want %d", got, want)
+	}
+	if got, want := f.Fact(5), 120; got != want {
+		t.Errorf("Fact(5) = %d, want %d", got, want)
+	}
+	if got, want := f.Fact(10), 3628800; got != want {
+		t.Errorf("Fact(10) = %d, want %d", got, want)
+	}
+
+	// fact * ifact == 1
+	for i := 0; i <= 20; i++ {
+		if got := f.Fact(i) * f.IFact(i) % mod; got != 1 {
+			t.Errorf("Fact(%d)*IFact(%d) = %d, want 1", i, i, got)
+		}
+	}
+
+	permTests := []struct{ n, r, want int }{
+		{5, 0, 1},
+		{5, 2, 20},
+		{5, 5, 120},
+		{10, 3, 720},
+		{5, 6, 0}, // n < r
+		{-1, 0, 0},
+	}
+	for _, tc := range permTests {
+		if got := f.Perm(tc.n, tc.r); got != tc.want {
+			t.Errorf("Perm(%d,%d) = %d, want %d", tc.n, tc.r, got, tc.want)
+		}
+	}
+
+	combTests := []struct{ n, r, want int }{
+		{5, 0, 1},
+		{5, 2, 10},
+		{5, 5, 1},
+		{10, 3, 120},
+		{20, 10, 184756},
+		{5, 6, 0},
+		{5, -1, 0},
+	}
+	for _, tc := range combTests {
+		if got := f.Comb(tc.n, tc.r); got != tc.want {
+			t.Errorf("Comb(%d,%d) = %d, want %d", tc.n, tc.r, got, tc.want)
+		}
+	}
+
+	// stirling2 test
+	m := 20
+	n := 20
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			want, _ := Stirling2Mod(i, j, mod)
+			got := f.Stirling2(i, j)
+			if got != want {
+				t.Errorf("Stirling2(%d,%d) = %d, want %d", i, j, got, want)
+			}
+		}
+	}
+}
 
 func TestModPow(t *testing.T) {
 	tests := []struct {
@@ -12,10 +77,10 @@ func TestModPow(t *testing.T) {
 		{2, 10, 1000000007, 1024},
 		{3, 0, 7, 1},
 		{5, 1, 7, 5},
-		{2, 3, 5, 3},    // 8 % 5 = 3
+		{2, 3, 5, 3}, // 8 % 5 = 3
 		{0, 5, 7, 0},
-		{7, 2, 1, 0},    // mod <= 1
-		{3, -1, 7, 0},   // 負の指数
+		{7, 2, 1, 0},  // mod <= 1
+		{3, -1, 7, 0}, // 負の指数
 	}
 	for _, tc := range tests {
 		got := ModPow(tc.x, tc.e, tc.mod)
@@ -355,6 +420,42 @@ func TestFactorial(t *testing.T) {
 			if got != tc.expected {
 				t.Errorf("expected %d but got %d", tc.expected, got)
 			}
+		})
+	}
+}
+
+func TestStirling2(t *testing.T) {
+	// 参考：https://keisan.site/exec/system/1292213989
+	tests := []struct {
+		m    int
+		n    int
+		want int
+	}{
+		{4, 2, 7},
+		{7, 4, 350},
+		{10, 7, 5880},
+		{20, 5, 749_206_090_500},
+	}
+	desc := func(m, n, want int) string {
+		return fmt.Sprintf("m=%d, n=%d, want=%d", m, n, want)
+	}
+
+	for _, tc := range tests {
+		t.Run(desc(tc.m, tc.n, tc.want), func(t *testing.T) {
+			got, dp := Stirling2(tc.m, tc.n)
+			if got != tc.want {
+				t.Errorf("want %d but got %d", tc.want, got)
+				t.Log(dp)
+			}
+
+			mod := 100
+			want := tc.want % mod
+			got, dp = Stirling2Mod(tc.m, tc.n, mod)
+			if got != want {
+				t.Errorf("want %d but got %d", want, got)
+				t.Log(dp)
+			}
+
 		})
 	}
 }
