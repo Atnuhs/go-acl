@@ -1,6 +1,7 @@
 package acl
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Atnuhs/go-acl/acl/testlib"
@@ -344,4 +345,43 @@ func TestMinLeft_Panic(t *testing.T) {
 			t.Errorf("MinLeft(0) = %d, want 0", got)
 		}
 	})
+}
+
+// 基本的な使い方: 区間和モノイドで一点更新と区間和クエリを行う。
+func ExampleSegmentTree() {
+	arr := []int{1, 2, 3, 4, 5}
+	seg := NewSegmentTree(arr, MoSum[int]())
+
+	fmt.Println(seg.Query(0, 5)) // 全体の和
+	fmt.Println(seg.Query(1, 4)) // [1, 4) の和: 2 + 3 + 4
+
+	seg.Set(2, 100) // a[2] を 100 に更新
+	fmt.Println(seg.Query(0, 5))
+	fmt.Println(seg.At(2))
+	// Output:
+	// 15
+	// 9
+	// 112
+	// 100
+}
+
+// モノイドを差し替えれば区間 max / min / xor などにも使える。
+func ExampleSegmentTree_max() {
+	seg := NewSegmentTree([]int{3, 1, 4, 1, 5, 9, 2, 6}, MoMax())
+
+	fmt.Println(seg.Query(0, 8)) // 全体の最大値
+	fmt.Println(seg.Query(0, 4)) // [0, 4) の最大値: max(3, 1, 4, 1)
+	// Output:
+	// 9
+	// 4
+}
+
+// MaxRight はモノイド上の二分探索を O(log n) で行う。
+// 区間和が初めて 10 を超える直前 (= 累積和がまだ 10 以下のままの最大の r) を求める例。
+func ExampleSegmentTree_MaxRight() {
+	seg := NewSegmentTree([]int{1, 2, 3, 4, 5}, MoSum[int]()) // 累積和: 1, 3, 6, 10, 15
+	r := seg.MaxRight(0, func(s int) bool { return s <= 10 })
+	fmt.Println(r) // Query(0, 4) = 10 はまだ ok。Query(0, 5) = 15 で初めて NG
+	// Output:
+	// 4
 }

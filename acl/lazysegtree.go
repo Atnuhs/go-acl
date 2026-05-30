@@ -5,6 +5,16 @@ import (
 	"math/bits"
 )
 
+// LazySegmentTree は遅延伝播セグメント木。
+// モノイド (S, Op, E) とその上の作用素モノイド (F, Composition, Id) を
+// 受け取り、区間に対する作用適用 (Apply) と区間積クエリ (Query) を
+// それぞれ O(log n) で処理する。
+//
+// 典型的な用途:
+//   - 区間加算 + 区間和 (LazyMoRangeAddRangeSum)
+//   - 区間更新 + 区間最大値 (LazyMoRangeUpdateRangeMax) など
+//
+// メモリ計算量: O(n)
 type LazySegmentTree[S, F any] struct {
 	n      int
 	size   int
@@ -15,6 +25,10 @@ type LazySegmentTree[S, F any] struct {
 	lm     *LazyMonoid[S, F]
 }
 
+// NewLazySegmentTree は初期配列 arr と作用素モノイド lm から遅延セグメント木を構築する。
+// 内部バッファのサイズは len(arr) 以上の最小の 2 のべき乗。
+//
+// 計算量: 時間 O(n)、空間 O(n) (n = len(arr))
 func NewLazySegmentTree[S, F any](arr []S, lm *LazyMonoid[S, F]) *LazySegmentTree[S, F] {
 	n := len(arr)
 	log := bits.Len(uint(n - 1))
@@ -55,6 +69,9 @@ func NewLazySegmentTree[S, F any](arr []S, lm *LazyMonoid[S, F]) *LazySegmentTre
 	return t
 }
 
+// Size は要素数 (構築時に渡された配列の長さ) を返す。
+//
+// 計算量: O(1)
 func (t *LazySegmentTree[S, F]) Size() int {
 	return t.n
 }
@@ -127,7 +144,10 @@ func (t *LazySegmentTree[S, F]) pushRange(l, r int) {
 	}
 }
 
-// Applyは区間[l, r)に作用素fを適用
+// Apply は半開区間 [l, r) のすべての要素に作用素 f を適用する。
+// l >= r のときは何もしない。
+//
+// 計算量: O(log n)
 func (t *LazySegmentTree[S, F]) Apply(l, r int, f F) {
 	if l >= r {
 		return
@@ -145,6 +165,10 @@ func (t *LazySegmentTree[S, F]) Apply(l, r int, f F) {
 	t.pullRange(l, r)
 }
 
+// Query は半開区間 [l, r) のモノイド積を返す。
+// l >= r のときは単位元 E を返す。
+//
+// 計算量: O(log n)
 func (t *LazySegmentTree[S, F]) Query(l, r int) S {
 	if l >= r {
 		return t.lm.E
@@ -171,11 +195,17 @@ func (t *LazySegmentTree[S, F]) Query(l, r int) S {
 	return t.lm.Op(sml, smr)
 }
 
-// Atは一点取得
+// At は i 番目 (0-indexed) の要素を返す。
+//
+// 計算量: O(log n)
 func (t *LazySegmentTree[S, F]) At(i int) S {
 	return t.Query(i, i+1)
 }
 
+// ToSlice は現在の各要素を順に並べたスライスを返す。
+// 主にデバッグ・テスト用途を想定する。
+//
+// 計算量: O(n log n)
 func (t *LazySegmentTree[S, F]) ToSlice() []S {
 	ret := L1[S](t.Size())
 	for i := range t.Size() {
@@ -184,7 +214,9 @@ func (t *LazySegmentTree[S, F]) ToSlice() []S {
 	return ret
 }
 
-// Setは一点更新
+// Set は i 番目 (0-indexed) の要素を x で上書きする。
+//
+// 計算量: O(log n)
 func (t *LazySegmentTree[S, F]) Set(i int, x S) {
 	i += t.size
 	// 遅延のpush
@@ -197,9 +229,11 @@ func (t *LazySegmentTree[S, F]) Set(i int, x S) {
 	}
 }
 
-// MaxRightはok(Query(l, r))がTrueとなるような最大のrを返す。
-// ok(E)がTrueであり、okは単調 (True → False) であることを要求する。
+// MaxRight は ok(Query(l, r)) が true となるような最大の r を返す。
+// ok(E) が true であり、ok は単調 (True → False) であることを要求する。
 // 0 <= l <= Size() を許容し、l == Size() のとき Size() を返す。
+//
+// 計算量: O(log n)
 func (t *LazySegmentTree[S, F]) MaxRight(l int, ok func(S) bool) int {
 	if l < 0 || l > t.n {
 		panic(fmt.Errorf("MaxRight: l must be 0 <= l <= %d but got %d", t.n, l))
@@ -236,9 +270,11 @@ func (t *LazySegmentTree[S, F]) MaxRight(l int, ok func(S) bool) int {
 	return t.n
 }
 
-// MinLeftはok(Query(l, r))がTrueとなるような最小のlを返す。
-// ok(E)がTrueであり、okは単調 (l を減らす方向で True → False) であることを要求する。
+// MinLeft は ok(Query(l, r)) が true となるような最小の l を返す。
+// ok(E) が true であり、ok は単調 (l を減らす方向で True → False) であることを要求する。
 // 0 <= r <= Size() を許容し、r == 0 のとき 0 を返す。
+//
+// 計算量: O(log n)
 func (t *LazySegmentTree[S, F]) MinLeft(r int, ok func(S) bool) int {
 	if r < 0 || r > t.n {
 		panic(fmt.Errorf("MinLeft: r must be 0 <= r <= %d but got %d", t.n, r))
